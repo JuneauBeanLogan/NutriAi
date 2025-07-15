@@ -91,6 +91,13 @@
             const formData = new FormData(e.target);
             const data = Object.fromEntries(formData);
             
+            // Convert numeric fields to proper numbers
+            data.age = parseInt(data.age);
+            data.weight = parseFloat(data.weight);
+            data.height = parseFloat(data.height);
+            
+            console.log('Form data being sent:', data);
+            
             try {
                 const response = await fetch('/plan', {
                     method: 'POST',
@@ -101,8 +108,13 @@
                     body: JSON.stringify(data)
                 });
                 
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    const errorText = await response.text();
+                    console.error('Error response:', errorText);
+                    throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
                 }
                 
                 const result = await response.json();

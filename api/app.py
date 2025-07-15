@@ -87,7 +87,10 @@ def convert_units(weight, height, unit_system):
 def get_plan():
     try:
         data = request.json
+        print(f"Received data: {data}")
+        
         if not data:
+            print("No data provided")
             return jsonify({'error': 'No data provided'}), 400
         
         age = data.get('age')
@@ -100,8 +103,15 @@ def get_plan():
         unit_system = data.get('unit_system', 'metric')
         location = data.get('location', 'US')
         
+        print(f"Parsed values: age={age}, weight={weight}, height={height}, gender={gender}, activity_level={activity_level}, goal={goal}")
+        
         if not all([age, weight, height, gender, activity_level, goal]):
-            return jsonify({'error': 'Missing required parameters'}), 400
+            missing_fields = [field for field, value in {
+                'age': age, 'weight': weight, 'height': height, 
+                'gender': gender, 'activity_level': activity_level, 'goal': goal
+            }.items() if not value]
+            print(f"Missing required parameters: {missing_fields}")
+            return jsonify({'error': f'Missing required parameters: {missing_fields}'}), 400
         
         # Convert units if needed
         weight_kg, height_cm = convert_units(weight, height, unit_system)
@@ -122,6 +132,9 @@ def get_plan():
             'location': location
         })
     except Exception as e:
+        print(f"Error in get_plan: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 @app.route('/health', methods=['GET'])
