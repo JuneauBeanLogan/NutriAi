@@ -1,7 +1,9 @@
 import math
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
 def calculate_bmi(weight_kg, height_cm):
     height_m = height_cm / 100
@@ -46,40 +48,94 @@ def allocate_macros(calories, goal):
     
     return round(protein_g), round(carb_g), round(fat_g)
 
-def suggest_meal(meal_type):
-    meals = {
-        'breakfast': 'Oatmeal with fruits and nuts',
-        'lunch': 'Grilled chicken salad',
-        'dinner': 'Salmon with veggies',
-        'snack': 'Greek yogurt with berries'
+def get_location_suggestions(location="US"):
+    """Get location-based food suggestions"""
+    location_foods = {
+        'US': ['Quinoa salad', 'Grilled chicken', 'Sweet potato', 'Avocado toast'],
+        'Mediterranean': ['Greek yogurt', 'Olive oil', 'Feta cheese', 'Tomatoes'],
+        'Asian': ['Brown rice', 'Tofu', 'Seaweed', 'Green tea'],
+        'Indian': ['Lentils', 'Curry vegetables', 'Basmati rice', 'Yogurt'],
+        'Mexican': ['Black beans', 'Quinoa', 'Avocado', 'Salsa verde']
     }
-    return meals.get(meal_type.lower(), 'Balanced meal option')
+    return location_foods.get(location, location_foods['US'])
+
+def suggest_meal(meal_type, location="US"):
+    location_foods = get_location_suggestions(location)
+    
+    meals = {
+        'breakfast': f'Oatmeal with fruits and nuts, {location_foods[0]}',
+        'lunch': f'Grilled chicken salad with {location_foods[1]}',
+        'dinner': f'Salmon with veggies and {location_foods[2]}',
+        'snack': f'Greek yogurt with berries and {location_foods[3]}'
+    }
+    return meals.get(meal_type.lower(), f'Balanced meal with {location_foods[0]}')
+
+def convert_units(weight, height, unit_system):
+    """Convert between metric and imperial units"""
+    if unit_system == 'imperial':
+        # Convert lbs to kg, inches to cm
+        weight_kg = weight * 0.453592
+        height_cm = height * 2.54
+    else:
+        # Already in metric
+        weight_kg = weight
+        height_cm = height
+    
+    return weight_kg, height_cm
 
 @app.route('/plan', methods=['POST'])
 def get_plan():
-    data = request.json
-    age = data.get('age')
-    weight_kg = data.get('weight_kg')
-    height_cm = data.get('height_cm')
-    gender = data.get('gender')
-    activity_level = data.get('activity_level')
-    goal = data.get('goal')
-    meal_type = data.get('meal_type', 'dinner')
-    
-    if not all([age, weight_kg, height_cm, gender, activity_level, goal]):
-        return jsonify({'error': 'Missing required parameters'}), 400
-    
-    bmi = calculate_bmi(weight_kg, height_cm)
-    calories = estimate_calories(age, weight_kg, height_cm, gender, activity_level, goal)
-    protein, carbs, fats = allocate_macros(calories, goal)
-    meal = suggest_meal(meal_type)
-    
-    return jsonify({
-        'bmi': round(bmi, 2),
-        'daily_calories': calories,
-        'macros': {'protein': protein, 'carbs': carbs, 'fats': fats},
-        'sample_meal': f'{meal_type.capitalize()}: {meal}'
-    })
+    try:
+        data = request.json
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        age = data.get('age')
+        weight = data.get('weight')
+        height = data.get('height')
+        gender = data.get('gender')
+        activity_level = data.get('activity_level')
+        goal = data.get('goal')
+        meal_type = data.get('meal_type', 'dinner')
+        unit_system = data.get('unit_system', 'metric')
+        location = data.get('location', 'US')
+        
+        if not all([age, weight, height, gender, activity_level, goal]):
+            return jsonify({'error': 'Missing required parameters'}), 400
+        
+        # Convert units if needed
+        weight_kg, height_cm = convert_units(weight, height, unit_system)
+        
+        bmi = calculate_bmi(weight_kg, height_cm)
+        calories = estimate_calories(age, weight_kg, height_cm, gender, activity_level, goal)
+        protein, carbs, fats = allocate_macros(calories, goal)
+        meal = suggest_meal(meal_type, location)
+        location_suggestions = get_location_suggestions(location)
+        
+        return jsonify({
+            'bmi': round(bmi, 2),
+            'daily_calories': calories,
+            'macros': {'protein': protein, 'carbs': carbs, 'fats': fats},
+            'sample_meal': f'{meal_type.capitalize()}: {meal}',
+            'location_suggestions': location_suggestions,
+            'unit_system': unit_system,
+            'location': location
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify({'status': 'healthy', 'message': 'NutriAI API is running'})
+
+@app.route('/', methods=['GET'])
+def root():
+    return jsonify({'message': 'NutriAI API', 'version': '1.0.0'})
+
+# This is required for Vercel serverless functions
+# The app object must be available at module level
+def handler(event, context):
+    return app(event, context)
 
 if __name__ == '__main__':
     app.run(debug=True)

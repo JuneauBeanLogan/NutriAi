@@ -16,9 +16,23 @@
     <p>Enter your details for a personalized plan.</p>
     <form id="planForm">
         <label>Age: <input type="number" name="age" required></label>
-        <label>Weight (kg): <input type="number" name="weight_kg" required></label>
-        <label>Height (cm): <input type="number" name="height_cm" required></label>
-        <label>Gender: <select name="gender" required><option value="male">Male</option><option value="female">Female</option></select></label>
+        
+        <label>Unit System: <select name="unit_system" id="unitSystem" onchange="updateUnits()">
+            <option value="metric">Metric</option>
+            <option value="imperial">Imperial</option>
+        </select></label>
+        
+        <label>Weight: <input type="number" name="weight" id="weightInput" step="0.1" required>
+            <span id="weightUnit">(kg)</span></label>
+        
+        <label>Height: <input type="number" name="height" id="heightInput" step="0.1" required>
+            <span id="heightUnit">(cm)</span></label>
+        
+        <label>Gender: <select name="gender" required>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+        </select></label>
+        
         <label>Activity Level: <select name="activity_level" required>
             <option value="sedentary">Sedentary</option>
             <option value="lightly active">Lightly Active</option>
@@ -26,39 +40,117 @@
             <option value="very active">Very Active</option>
             <option value="super active">Super Active</option>
         </select></label>
+        
         <label>Goal: <select name="goal" required>
             <option value="loss">Weight Loss</option>
             <option value="maintenance">Maintenance</option>
             <option value="gain">Weight Gain</option>
         </select></label>
+        
+        <label>Location/Cuisine: <select name="location">
+            <option value="US">US/American</option>
+            <option value="Mediterranean">Mediterranean</option>
+            <option value="Asian">Asian</option>
+            <option value="Indian">Indian</option>
+            <option value="Mexican">Mexican</option>
+        </select></label>
+        
         <label>Meal Type: <select name="meal_type">
             <option value="breakfast">Breakfast</option>
             <option value="lunch">Lunch</option>
             <option value="dinner">Dinner</option>
             <option value="snack">Snack</option>
         </select></label>
+        
         <button type="submit">Generate Plan</button>
     </form>
     <div id="result"></div>
     <script>
+        function updateUnits() {
+            const unitSystem = document.getElementById('unitSystem').value;
+            const weightUnit = document.getElementById('weightUnit');
+            const heightUnit = document.getElementById('heightUnit');
+            const weightInput = document.getElementById('weightInput');
+            const heightInput = document.getElementById('heightInput');
+            
+            if (unitSystem === 'imperial') {
+                weightUnit.textContent = '(lbs)';
+                heightUnit.textContent = '(inches)';
+                weightInput.placeholder = 'e.g., 150';
+                heightInput.placeholder = 'e.g., 70';
+            } else {
+                weightUnit.textContent = '(kg)';
+                heightUnit.textContent = '(cm)';
+                weightInput.placeholder = 'e.g., 68';
+                heightInput.placeholder = 'e.g., 175';
+            }
+        }
+        
         document.getElementById('planForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(e.target);
             const data = Object.fromEntries(formData);
-            const response = await fetch('/plan', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-            const result = await response.json();
-            document.getElementById('result').innerHTML = `
-                <h2>Your Plan</h2>
-                <p>BMI: ${result.bmi}</p>
-                <p>Daily Calories: ${result.daily_calories}</p>
-                <p>Macros: Protein ${result.macros.protein}g, Carbs ${result.macros.carbs}g, Fats ${result.macros.fats}g</p>
-                <p>Sample Meal: ${result.sample_meal}</p>
-            `;
+            
+            try {
+                const response = await fetch('/plan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.error) {
+                    document.getElementById('result').innerHTML = `
+                        <h2 style="color: red;">Error</h2>
+                        <p>${result.error}</p>
+                    `;
+                    return;
+                }
+                
+                document.getElementById('result').innerHTML = `
+                    <h2>Your Personalized Nutrition Plan</h2>
+                    <div style="background: #f0f8ff; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                        <h3>Your Stats</h3>
+                        <p><strong>BMI:</strong> ${result.bmi}</p>
+                        <p><strong>Daily Calories:</strong> ${result.daily_calories}</p>
+                        <p><strong>Unit System:</strong> ${result.unit_system}</p>
+                        <p><strong>Location/Cuisine:</strong> ${result.location}</p>
+                    </div>
+                    
+                    <div style="background: #f0fff0; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                        <h3>Macronutrients</h3>
+                        <p><strong>Protein:</strong> ${result.macros.protein}g</p>
+                        <p><strong>Carbs:</strong> ${result.macros.carbs}g</p>
+                        <p><strong>Fats:</strong> ${result.macros.fats}g</p>
+                    </div>
+                    
+                    <div style="background: #fff8dc; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                        <h3>Sample Meal</h3>
+                        <p>${result.sample_meal}</p>
+                    </div>
+                    
+                    <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                        <h3>Location-Based Food Suggestions</h3>
+                        <ul>
+                            ${result.location_suggestions.map(food => `<li>${food}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('result').innerHTML = `
+                    <h2 style="color: red;">Error</h2>
+                    <p>Failed to generate plan: ${error.message}</p>
+                `;
+            }
         });
+        
+        // Initialize units on page load
+        updateUnits();
     </script>
 </body>
 </html>
