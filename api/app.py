@@ -137,6 +137,45 @@ def get_plan():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
+@app.route('/plan/weekly', methods=['POST'])
+def get_weekly_plan():
+    try:
+        data = request.json
+        print(f"Received data: {data}")
+
+        # For now, make everything free - remove subscription check
+        # subscription_check = data.get('subscription', False)
+        # if not subscription_check:
+        #     return jsonify({ 'error': 'Subscription required for access' }), 403
+
+        dietary_restrictions = data.get('dietary_restrictions', 'none')
+        budget = data.get('budget', 'moderate')
+        location = data.get('location', 'US')
+
+        # Dummy response. Replace this with actual plan generation
+        weekly_plan = {
+            'days': [
+                {
+                    'day': 'Monday',
+                    'meals': [
+                        {'meal': 'Breakfast', 'recipe': 'Avocado Toast', 'calories': 300},
+                        {'meal': 'Lunch', 'recipe': 'Grilled Chicken Salad', 'calories': 500},
+                        {'meal': 'Dinner', 'recipe': 'Salmon and Quinoa', 'calories': 700}
+                    ]
+                },
+                # More days...
+            ],
+            'grocery_list': ['Avocados', 'Chicken Breast', 'Quinoa', 'Salmon']
+        }
+
+        return jsonify(weekly_plan)
+
+    except Exception as e:
+        print(f"Error in get_weekly_plan: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/health', methods=['GET'])
 def health_check():
     return jsonify({'status': 'healthy', 'message': 'NutriAI API is running'})

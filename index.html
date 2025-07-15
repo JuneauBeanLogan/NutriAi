@@ -5,16 +5,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NutriAI - Personalized Nutrition Plans</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
         form { display: grid; gap: 10px; }
-        button { padding: 10px; background: #4CAF50; color: white; border: none; cursor: pointer; }
+        button { padding: 10px; background: #4CAF50; color: white; border: none; cursor: pointer; border-radius: 5px; }
+        button:hover { background: #45a049; }
+        button.premium { background: #ff6b35; }
+        button.premium:hover { background: #e55a2b; }
         #result { margin-top: 20px; padding: 10px; border: 1px solid #ddd; }
+        .premium-section { background: #fff9e6; padding: 15px; border-radius: 8px; margin: 20px 0; border: 2px solid #ffcc00; }
+        .premium-header { color: #ff6b35; font-weight: bold; }
+        .tabs { display: flex; margin-bottom: 20px; }
+        .tab { padding: 10px 20px; margin-right: 10px; background: #f0f0f0; border: none; cursor: pointer; border-radius: 5px; }
+        .tab.active { background: #4CAF50; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .subscription-note { background: #e8f5e8; padding: 10px; border-radius: 5px; margin: 10px 0; border-left: 4px solid #4CAF50; }
+        .auth-section { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #ddd; }
+        .user-info { background: #e8f5e8; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4CAF50; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
     <h1>NutriAI: Your AI-Powered Nutrition Planner</h1>
     <p>Enter your details for a personalized plan.</p>
-    <form id="planForm">
+    
+    <!-- Authentication Section -->
+    <div id="auth-section" class="auth-section">
+        <div id="signed-out" class="hidden">
+            <h3>Sign in to get started</h3>
+            <p>Create an account or sign in to access your personalized nutrition plans.</p>
+            <div id="sign-in"></div>
+        </div>
+        
+        <div id="signed-in" class="user-info hidden">
+            <h3>Welcome!</h3>
+            <p>You're signed in as <span id="user-name"></span></p>
+            <button onclick="clerk.signOut()">Sign Out</button>
+        </div>
+    </div>
+    
+    <div id="main-content" class="hidden">
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('basic')">Basic Plan</button>
+            <button class="tab" onclick="showTab('premium')">Weekly Plans</button>
+        </div>
+    
+    <div id="basic" class="tab-content active">
+        <form id="planForm">
         <label>Age: <input type="number" name="age" required></label>
         
         <label>Unit System: <select name="unit_system" id="unitSystem" onchange="updateUnits()">
@@ -62,9 +99,133 @@
             <option value="snack">Snack</option>
         </select></label>
         
-        <button type="submit">Generate Plan</button>
-    </form>
+            <button type="submit">Generate Plan</button>
+        </form>
+    </div>
+    
+    <div id="premium" class="tab-content">
+        <div class="premium-section">
+            <h2 class="premium-header">🌟 Premium Weekly Meal Plans</h2>
+            <p>Get personalized weekly meal plans with recipes, nutritional breakdowns, and automated grocery lists!</p>
+            
+            <div class="subscription-note">
+                <strong>Note:</strong> This is a premium feature. For demo purposes, check the "I have a subscription" box below.
+            </div>
+            
+            <form id="weeklyPlanForm">
+                <label>Age: <input type="number" name="age" required></label>
+                
+                <label>Unit System: <select name="unit_system" id="weeklyUnitSystem" onchange="updateWeeklyUnits()">
+                    <option value="metric">Metric</option>
+                    <option value="imperial">Imperial</option>
+                </select></label>
+                
+                <label>Weight: <input type="number" name="weight" id="weeklyWeightInput" step="0.1" required>
+                    <span id="weeklyWeightUnit">(kg)</span></label>
+                
+                <label>Height: <input type="number" name="height" id="weeklyHeightInput" step="0.1" required>
+                    <span id="weeklyHeightUnit">(cm)</span></label>
+                
+                <label>Gender: <select name="gender" required>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                </select></label>
+                
+                <label>Activity Level: <select name="activity_level" required>
+                    <option value="sedentary">Sedentary</option>
+                    <option value="lightly active">Lightly Active</option>
+                    <option value="moderately active">Moderately Active</option>
+                    <option value="very active">Very Active</option>
+                    <option value="super active">Super Active</option>
+                </select></label>
+                
+                <label>Goal: <select name="goal" required>
+                    <option value="loss">Weight Loss</option>
+                    <option value="maintenance">Maintenance</option>
+                    <option value="gain">Weight Gain</option>
+                </select></label>
+                
+                <label>Location/Cuisine: <select name="location">
+                    <option value="US">US/American</option>
+                    <option value="Mediterranean">Mediterranean</option>
+                    <option value="Asian">Asian</option>
+                    <option value="Indian">Indian</option>
+                    <option value="Mexican">Mexican</option>
+                </select></label>
+                
+                <label>Dietary Restrictions: <select name="dietary_restrictions">
+                    <option value="none">None</option>
+                    <option value="vegetarian">Vegetarian</option>
+                    <option value="vegan">Vegan</option>
+                    <option value="keto">Keto</option>
+                    <option value="paleo">Paleo</option>
+                    <option value="gluten-free">Gluten-Free</option>
+                    <option value="dairy-free">Dairy-Free</option>
+                </select></label>
+                
+                <label>Budget: <select name="budget">
+                    <option value="low">Low ($50-75/week)</option>
+                    <option value="moderate">Moderate ($75-125/week)</option>
+                    <option value="high">High ($125+/week)</option>
+                </select></label>
+                
+                <label><input type="checkbox" name="subscription" value="true"> I have a subscription (Demo)</label>
+                
+                <button type="submit" class="premium">Generate Weekly Plan</button>
+            </form>
+        </div>
+    </div>
+    </div> <!-- Close main-content -->
+    
     <div id="result"></div>
+    
+    <!-- Clerk Scripts -->
+    <script src="https://unpkg.com/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
+    <script>
+        // Initialize Clerk - You'll need to replace with your actual publishable key
+        const clerkPubKey = 'YOUR_CLERK_PUBLISHABLE_KEY_HERE';
+        
+        // For demo purposes, we'll skip Clerk initialization and show the app directly
+        // In production, you would uncomment the lines below and add your Clerk key
+        
+        /*
+        const clerk = window.Clerk;
+        
+        clerk.load({
+            publishableKey: clerkPubKey,
+            // Configure sign-in/sign-up options
+            signInUrl: '/sign-in',
+            signUpUrl: '/sign-up',
+            afterSignInUrl: '/',
+            afterSignUpUrl: '/'
+        });
+        
+        clerk.addListener(({ user }) => {
+            if (user) {
+                // User is signed in
+                document.getElementById('signed-out').classList.add('hidden');
+                document.getElementById('signed-in').classList.remove('hidden');
+                document.getElementById('main-content').classList.remove('hidden');
+                document.getElementById('user-name').textContent = user.firstName || user.emailAddresses[0].emailAddress;
+            } else {
+                // User is signed out
+                document.getElementById('signed-out').classList.remove('hidden');
+                document.getElementById('signed-in').classList.add('hidden');
+                document.getElementById('main-content').classList.add('hidden');
+            }
+        });
+        
+        // Mount the sign-in component
+        clerk.mountSignIn(document.getElementById('sign-in'));
+        */
+        
+        // For demo purposes, show the app directly
+        document.getElementById('signed-out').classList.add('hidden');
+        document.getElementById('signed-in').classList.remove('hidden');
+        document.getElementById('main-content').classList.remove('hidden');
+        document.getElementById('user-name').textContent = 'Demo User';
+    </script>
+    
     <script>
         function updateUnits() {
             const unitSystem = document.getElementById('unitSystem').value;
@@ -164,8 +325,143 @@
             }
         });
         
+        // Function to update units for weekly plan form
+        function updateWeeklyUnits() {
+            const unitSystem = document.getElementById('weeklyUnitSystem').value;
+            const weightUnit = document.getElementById('weeklyWeightUnit');
+            const heightUnit = document.getElementById('weeklyHeightUnit');
+            const weightInput = document.getElementById('weeklyWeightInput');
+            const heightInput = document.getElementById('weeklyHeightInput');
+            
+            if (unitSystem === 'imperial') {
+                weightUnit.textContent = '(lbs)';
+                heightUnit.textContent = '(inches)';
+                weightInput.placeholder = 'e.g., 150';
+                heightInput.placeholder = 'e.g., 70';
+            } else {
+                weightUnit.textContent = '(kg)';
+                heightUnit.textContent = '(cm)';
+                weightInput.placeholder = 'e.g., 68';
+                heightInput.placeholder = 'e.g., 175';
+            }
+        }
+        
+        // Function to show/hide tabs
+        function showTab(tabName) {
+            // Hide all tab contents
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+            
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+        
+        // Weekly plan form submission
+        document.getElementById('weeklyPlanForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            
+            // Convert numeric fields to proper numbers
+            data.age = parseInt(data.age);
+            data.weight = parseFloat(data.weight);
+            data.height = parseFloat(data.height);
+            
+            // Handle checkbox
+            data.subscription = data.subscription === 'true';
+            
+            console.log('Weekly plan data being sent:', data);
+            
+            try {
+                const response = await fetch('/plan/weekly', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'x-vercel-protection-bypass': 'fBhhd0uaqexwXVYkkHXKE0rpfVtB7WNq'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Error response:', errorText);
+                    throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.error) {
+                    document.getElementById('result').innerHTML = `
+                        <h2 style="color: red;">Error</h2>
+                        <p>${result.error}</p>
+                    `;
+                    return;
+                }
+                
+                // Display weekly plan results
+                let daysHtml = '';
+                if (result.days && result.days.length > 0) {
+                    result.days.forEach(day => {
+                        daysHtml += `
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                                <h4>${day.day}</h4>
+                                <ul>
+                                    ${day.meals.map(meal => `<li><strong>${meal.meal}:</strong> ${meal.recipe} (${meal.calories} cal)</li>`).join('')}
+                                </ul>
+                            </div>
+                        `;
+                    });
+                }
+                
+                let groceryHtml = '';
+                if (result.grocery_list && result.grocery_list.length > 0) {
+                    groceryHtml = `
+                        <div style="background: #e8f5e8; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                            <h3>🛒 Grocery List</h3>
+                            <ul>
+                                ${result.grocery_list.map(item => `<li>${item}</li>`).join('')}
+                            </ul>
+                        </div>
+                    `;
+                }
+                
+                document.getElementById('result').innerHTML = `
+                    <h2>🌟 Your Premium Weekly Meal Plan</h2>
+                    <div style="background: #fff9e6; padding: 15px; border-radius: 8px; margin: 10px 0; border: 2px solid #ffcc00;">
+                        <h3>Plan Details</h3>
+                        <p><strong>Dietary Restrictions:</strong> ${data.dietary_restrictions}</p>
+                        <p><strong>Budget:</strong> ${data.budget}</p>
+                        <p><strong>Location/Cuisine:</strong> ${data.location}</p>
+                    </div>
+                    
+                    <div style="background: #f0f8ff; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                        <h3>📅 Weekly Meal Schedule</h3>
+                        ${daysHtml}
+                    </div>
+                    
+                    ${groceryHtml}
+                `;
+                
+            } catch (error) {
+                document.getElementById('result').innerHTML = `
+                    <h2 style="color: red;">Error</h2>
+                    <p>Failed to generate weekly plan: ${error.message}</p>
+                `;
+            }
+        });
+        
         // Initialize units on page load
         updateUnits();
+        updateWeeklyUnits();
     </script>
 </body>
 </html>
