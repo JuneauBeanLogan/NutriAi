@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriAI - Personalized Nutrition Plans</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
+        form { display: grid; gap: 10px; }
+        button { padding: 10px; background: #4CAF50; color: white; border: none; cursor: pointer; }
+        #result { margin-top: 20px; padding: 10px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+    <h1>NutriAI: Your AI-Powered Nutrition Planner</h1>
+    <p>Enter your details for a personalized plan.</p>
+    <form id="planForm">
+        <label>Age: <input type="number" name="age" required></label>
+        <label>Weight (kg): <input type="number" name="weight_kg" required></label>
+        <label>Height (cm): <input type="number" name="height_cm" required></label>
+        <label>Gender: <select name="gender" required><option value="male">Male</option><option value="female">Female</option></select></label>
+        <label>Activity Level: <select name="activity_level" required>
+            <option value="sedentary">Sedentary</option>
+            <option value="lightly active">Lightly Active</option>
+            <option value="moderately active">Moderately Active</option>
+            <option value="very active">Very Active</option>
+            <option value="super active">Super Active</option>
+        </select></label>
+        <label>Goal: <select name="goal" required>
+            <option value="loss">Weight Loss</option>
+            <option value="maintenance">Maintenance</option>
+            <option value="gain">Weight Gain</option>
+        </select></label>
+        <label>Meal Type: <select name="meal_type">
+            <option value="breakfast">Breakfast</option>
+            <option value="lunch">Lunch</option>
+            <option value="dinner">Dinner</option>
+            <option value="snack">Snack</option>
+        </select></label>
+        <button type="submit">Generate Plan</button>
+    </form>
+    <div id="result"></div>
+    <script>
+        document.getElementById('planForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            const response = await fetch('/plan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await response.json();
+            document.getElementById('result').innerHTML = `
+                <h2>Your Plan</h2>
+                <p>BMI: ${result.bmi}</p>
+                <p>Daily Calories: ${result.daily_calories}</p>
+                <p>Macros: Protein ${result.macros.protein}g, Carbs ${result.macros.carbs}g, Fats ${result.macros.fats}g</p>
+                <p>Sample Meal: ${result.sample_meal}</p>
+            `;
+        });
+    </script>
+</body>
+</html>
