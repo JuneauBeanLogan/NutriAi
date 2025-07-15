@@ -94,7 +94,10 @@
             try {
                 const response = await fetch('/plan', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'x-vercel-protection-bypass': 'fBhhd0uaqexwXVYkkHXKE0rpfVtB7WNq'
+                    },
                     body: JSON.stringify(data)
                 });
                 
