@@ -23,11 +23,5 @@
       "src": "/(.*)",
       "dest": "/index.html"
     }
-  ],
-  "functions": {
-    "api/app.py": {
-      "memory": 1024,
-      "maxDuration": 30
-    }
-  }
+  ]
 }
