@@ -1,27 +1,16 @@
 {
-  "version": 2,
-  "builds": [
+  "rewrites": [
     {
-      "src": "api/app.py",
-      "use": "@vercel/python"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/app.py"
+      "source": "/api/(.*)",
+      "destination": "/api/app.py"
     },
     {
-      "src": "/plan",
-      "dest": "/api/app.py"
+      "source": "/plan",
+      "destination": "/api/app.py"
     },
     {
-      "src": "/health",
-      "dest": "/api/app.py"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/health",
+      "destination": "/api/app.py"
     }
   ]
 }

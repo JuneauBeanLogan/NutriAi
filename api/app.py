@@ -134,8 +134,6 @@ def root():
 
 # This is required for Vercel serverless functions
 # The app object must be available at module level
-def handler(event, context):
-    return app(event, context)
 
 if __name__ == '__main__':
     app.run(debug=True)
